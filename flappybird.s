@@ -29,4 +29,46 @@
 # - (write here, if any)
 #
 #####################################################################
+
+.data
+	displayAddress: .word 0x10008000
+	
+	#backgroundColour: .word 0x4287f5 # Having these here may be pointless, so might have to remove them
+	#birdColour: .word 0xff00f7
+	#pipeColour: .word 0x08a300
+	
+.text
+
+	lw $t0, displayAddress	# Loading in the address of the first pixel in the display	
+	
+	li $t1, 0x4287f5 # Colour of the Background: #4287f5, a blue colour
+	li $t2, 0xff00f7 # Colour of the Bird: #ff00f7, a pink colour
+	li $t3, 0x08a300 # Colour of the Pipe: #08a300, a green colour
+	
+BACKINIT: # Painting the background
+	li $t4, 0    # i = 0
+	li $t5, 4096 # i <= 4096 will paint the entire background 
+BACKFOR:
+	bgt $t4, $t5, BACKEND # If i > 4096, then we jump to the end of this for loop
+		
+	sw $t1, 0($t0) # Changing the color at this pixel to the background color in $t1
+		
+	addi $t0, $t0, 4 # Increment the base by an offset of 4
+	addi $t4, $t4, 4 # Increment the counter
+		
+	j BACKFOR
+BACKEND:
+			
+	# We need to reset the offset value, by loading in the displayAddress again, since we've incremented it by 4096, or 0x00001000 (In Hex)
+	lw $t0, displayAddress
+	
+BIRDINIT: # Painting the bird
+BIRDFOR:
+BIRDEND:
+	
+	
+PIPEINIT: # Painting the pipe
+PIPEFOR:
+PIPEEND:
+	
                     

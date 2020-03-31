@@ -23,10 +23,10 @@
 	
 	LOOPINIT:
 		li $t4, 0xae00ff # Storing the color purple
-		li $t5, 0 # for i < 10
-		li $t6, 132 
-	FOR:				# This should paint the first row, so pixel 0-31, and the pixel in row 2 (pixel 32)
-		bge $t5, $t6, END
+		li $t5, 0        # for i <= 128,  
+		li $t6, 128      # 4094 will paint exactly the whole screen
+	FOR:    # This should paint the first row, so pixel 0-31, and the pixel in row 2 (pixel 32)
+		bgt $t5, $t6, END
 		
 		sw $t4, 0($t0)
 		
