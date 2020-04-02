@@ -68,9 +68,9 @@
 	
 		jal PAINTPIPE
 		
-		#lw $s6, displayAddress # This is the lowest possible value the bird can go, at this point, it is "touching" the ground
-		#addi $s6, $s6, 3732    # which is lethal and ends the game.
-		j EXIT
+		lw $s6, displayAddress # This is the lowest possible value the bird can go, at this point, it is "touching" the ground
+		addi $s6, $s6, 3732    # which is lethal and ends the game.
+		#j EXIT
 	GAMELOOP:
 	
 		# Check if the bird has reached the ground, if so jump to EXIT
@@ -81,20 +81,14 @@
 		
 		
 		
-		
-		
 		# Check if the pipe has reached the leftmost index it can go to (displayAddress+8), if so, make a new pipe
 		bne $a1, $s4, PIPEMOVE 
 		
-		
-		
-		
-		
-		
-		
-		
 		jal RANDOMINT      # Creating a new random height
-		addi $a1, $a1, 108 # Moving the pipe back to its starting location
+		lw $a1, displayAddress
+		addi $a1, $a1, 116
+		
+		#addi $a1, $a1, 108 # Moving the pipe back to its starting location
 		
 	PIPEMOVE:
 	
@@ -120,7 +114,7 @@
 	
 EXIT:	
 	# If the code jumps here, we clear the pipes and bird off the screen and print a BYE statement. Then the game terminates.
-	#jal PAINTBACK
+	jal PAINTBACK
 	
 	# Need some code for printing BYE
 	
@@ -186,37 +180,33 @@ PAINTPIPE: # This is a function that paints a pipe with a given height ($s3) for
 	   PIPEINIT:
 	   	li $t8, 0 # i = 0, this is so we can count how many lines in the gap we've skipped
 	   	
-	   	add $t9, $t9, $a1 # Storing the centre "x" coord of the pipe in $t9
-	   
+	   	move $t9, $a1 # Has address of the middle of the pipe (x coord) 
+
 	   	li $t7, 128   # A temp holder for 128 so we can calculate what row the gap begins in
 	   	mult $s3, $t7 
 	   	mflo $t7
 	   	
 	   	# Calculate the "x" value of the pillar
 	   	add $t7, $t7, $a1 # After this offset, the gap begins
-	   	
-	   	lw $s0, displayAddress # This is the address right before the gaps starts
-	   	add $s0, $s0, $t7
-	   	
-	   	lw $s1, displayAddress
-	   	add $s1, $s1, $a1
-	   	addi $s1, $s1, 3968 # This makes $s1 the last possible pixel in the pipe, at the bottom of the screen.
+		
+		move $s1, $a1
+		addi $s1, $s1, 3968
 		
 		# Working values
-		# $s0 - The address right before the gap starting
+		# $t7 - The address right before the gap starting
 		# $s1 - The address of the bottom of the pipe
 		# $t8 - The counter for how many rows have been skipped
 		# $t9 - The offset of the middle of the pipe
 		
 	   PIPELOOP:
 	   	
-	   	bne $t9, $s0, PIPEROW # We check if we are at the $s0 address, if not, we paint a row and increment the offset in $t9 & $s0
+	   	bne $t9, $t7, PIPEROW # We check if we are at the $t7 address, if not, we paint a row and increment the offset in $t9 & $s0
 	   	bge $t8, 8, PIPEROW
 	   	
-	   	# If we are at the $s0 address, we need to skip an iteration, so we must increment the counter once and continue
+	   	# If we are at the $t7 address, we need to skip an iteration, so we must increment the counter once and continue
 	   	addi $t8, $t8, 1   # Incrementing the gap counter
 	   	addi $t9, $t9, 128 # Incrementing the middle index to the next point
-	   	addi $s0, $s0, 128 # Incrementing the "gap catch"
+	   	addi $t7, $t7, 128 # Incrementing the "gap catch"
 	   	
 	   	j PIPELOOP # Looping again
 	   	
