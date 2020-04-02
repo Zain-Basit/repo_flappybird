@@ -70,16 +70,19 @@
 		
 		lw $s6, displayAddress # This is the lowest possible value the bird can go, at this point, it is "touching" the ground
 		addi $s6, $s6, 3732    # which is lethal and ends the game.
+		
+		lw $s7, displayAddress # The roof
+		addi $s7, $s7, 20
 		#j EXIT
+		
 	GAMELOOP:
 	
-		# Check if the bird has reached the ground, if so jump to EXIT
+		# Check if the bird has reached the ground/roof, if so jump to EXIT
 		beq $a2, $s6, EXIT
+		beq $a2, $s7, EXIT
 		
 		# Check if the bird has hit the pipe, if so jump to EXIT
-		
-		
-		
+		jal HITBOXCHECK
 		
 		# Check if the pipe has reached the leftmost index it can go to (displayAddress+8), if so, make a new pipe
 		bne $a1, $s4, PIPEMOVE 
@@ -146,7 +149,7 @@ PAINTBIRD: # This is a function that paints a bird at a given height offset ($a2
 	    
 	sw $t2, 0($a2)   # Painting the bird part 0 
 	sw $t2, 8($a2)   # 1
-	sw $t2, 128($a2) # 2
+	sw $t2, 128($a2) # 2 
 	sw $t2, 132($a2) # 3
 	sw $t2, 136($a2) # 4
 	sw $t2, 140($a2) # 5
@@ -228,5 +231,35 @@ PAINTPIPE: # This is a function that paints a pipe with a given height ($s3) for
 	   PIPEEND:
 	   
 	   	jr $ra # Returning to the calling point of the function
-	   
-	   
+	   	
+HITBOXCHECK: # This function checks if the bird has hit the pipe, if so, the bird dies, and the game ends
+		
+		# Need to check above part 0
+		lw $s2, -128($a2)
+		beq $t3, $s2, EXIT
+		
+		# Checking above part 1
+		lw $s2, -120($a2)
+		beq $t3, $s2, EXIT
+		
+		# Check to the right of part 1
+		lw $s2, 12($a2)
+	   	beq $t3, $s2, EXIT
+	   	
+	   	# Check to the right of part 5
+	   	lw $s2, 144($a2)
+		beq $t3, $s2, EXIT
+		
+		# Check below part 5
+	   	lw $s2, 268($a2)
+		beq $t3, $s2, EXIT
+		
+		# Check below part 6
+		lw $s2, 384($a2)
+		beq $t3, $s2, EXIT
+		
+		# Check below part 8
+	   	lw $s2, 392($a2)
+		beq $t3, $s2, EXIT
+		
+		jr $ra
