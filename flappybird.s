@@ -17,7 +17,7 @@
 # Which milestone is reached in this submission?
 # (See the assignment handout for descriptions of the milestones)
 # - Milestone 1/2/3/4/5 (choose the one the applies)
-# - Completed Milestone 1 on April 1, 2020
+# - Completed Milestone 3
 #
 # Which approved additional features have been implemented?
 # (See the assignment handout for the list of additional features)
@@ -76,7 +76,6 @@
 		
 		lw $s7, displayAddress # The roof
 		addi $s7, $s7, 20
-		#j EXIT
 		
 	GAMELOOP:
 	
@@ -118,9 +117,208 @@
 	
 EXIT:	
 	# If the code jumps here, we clear the pipes and bird off the screen and print a BYE statement. Then the game terminates.
-	#jal PAINTBACK
 	
-	# Need some code for printing BYE
+	li $t1, 0x312b1f # Paint the background brown
+	jal PAINTBACK
+	
+	li $t2, 0xffffff # Load in white here
+	
+	# Write G
+	addi $t0, $t0, 1304
+	sw $t2, 0($t0)
+	sw $t2, 4($t0) # Top of the G
+	sw $t2, 8($t0)
+	
+	sw $t2, 20($t0)
+	sw $t2, 24($t0) # top of A
+	
+	sw $t2, 36($t0) # top of M
+	sw $t2, 52($t0)
+	
+	sw $t2, 60($t0)
+	sw $t2, 64($t0)
+	sw $t2, 68($t0)
+	sw $t2, 72($t0)
+
+	sw $t2, 80($t0)
+	#########3
+	
+	addi $t0, $t0, 124
+	
+	sw $t2, 0($t0)
+	
+	sw $t2, 20($t0)
+	sw $t2, 32($t0)
+	
+	sw $t2, 40($t0)
+	sw $t2, 44($t0)
+	sw $t2, 52($t0)
+	sw $t2, 56($t0)
+	
+	sw $t2, 64($t0)
+	sw $t2, 84($t0)
+	
+	# row 3
+	
+	addi $t0, $t0, 128
+	
+	sw $t2, 0($t0)
+	sw $t2, 8($t0)
+	sw $t2, 12($t0) # G
+	
+	sw $t2, 20($t0) # A
+	sw $t2, 24($t0)
+	sw $t2, 28($t0)
+	sw $t2, 32($t0)
+	
+	sw $t2, 40($t0)
+	sw $t2, 48($t0)
+	sw $t2, 56($t0)
+	
+	sw $t2, 64($t0)
+	sw $t2, 68($t0)
+	sw $t2, 72($t0)
+	
+	sw $t2, 84($t0)	
+	
+	# row 4
+	
+	addi $t0, $t0, 128
+			
+	sw $t2, 0($t0)
+	sw $t2, 12($t0)
+	
+	sw $t2, 20($t0)			
+	sw $t2, 32($t0)
+	
+	sw $t2, 40($t0)
+	sw $t2, 56($t0)
+	
+	sw $t2, 64($t0)
+	
+	sw $t2, 84($t0)
+	
+	# row 5
+	addi $t0, $t0, 128
+	
+	sw $t2, 0($t0)
+	sw $t2, 4($t0)
+	sw $t2, 8($t0)
+	sw $t2, 12($t0)
+	
+	sw $t2, 20($t0)
+	sw $t2, 32($t0)
+	
+	sw $t2, 40($t0)
+	sw $t2, 56($t0)
+	
+	sw $t2, 64($t0)
+	sw $t2, 68($t0)
+	sw $t2, 72($t0)
+	sw $t2, 76($t0)
+	
+	sw $t2, 84($t0)
+	
+	# row6
+	
+	addi $t0, $t0, 128
+	sw $t2, 84($t0)
+	
+	# row 7
+	
+	addi $t0, $t0, 128
+	
+	sw $t2, 0($t0)
+	sw $t2, 4($t0)
+	sw $t2, 8($t0)
+	sw $t2, 12($t0)
+	
+	sw $t2, 20($t0)
+	sw $t2, 36($t0)
+	
+	sw $t2, 44($t0)
+	sw $t2, 48($t0)
+	sw $t2, 52($t0)
+	sw $t2, 56($t0)
+	
+	sw $t2, 64($t0)
+	sw $t2, 68($t0)
+	sw $t2, 72($t0)
+	sw $t2, 76($t0)
+	
+	sw $t2, 84($t0)
+	
+	# row 8
+	addi $t0, $t0, 128
+	
+	sw $t2, 0($t0)
+	sw $t2, 12($t0)
+	
+	sw $t2, 20($t0)
+	sw $t2, 36($t0)
+	
+	sw $t2, 44($t0)
+	
+	sw $t2, 64($t0)
+	sw $t2, 76($t0)
+	
+	sw $t2, 84($t0)
+	
+	# row 9
+	
+	addi $t0, $t0, 128
+	
+	sw $t2, 0($t0)
+	sw $t2, 12($t0)
+	
+	sw $t2, 20($t0)
+	sw $t2, 36($t0)
+	
+	sw $t2, 44($t0)
+	sw $t2, 48($t0)
+	sw $t2, 52($t0)
+	
+	sw $t2, 64($t0)
+	sw $t2, 68($t0)
+	sw $t2, 72($t0)
+	sw $t2, 76($t0)
+	
+	sw $t2, 84($t0)
+	
+	#### row 10
+	
+	addi $t0, $t0, 128
+	
+	sw $t2, 0($t0)
+	sw $t2, 12($t0)
+	
+	sw $t2, 24($t0)
+	sw $t2, 32($t0)
+	
+	sw $t2, 44($t0)
+	
+	sw $t2, 64($t0)
+	sw $t2, 72($t0)
+	
+	# row 11
+	addi $t0, $t0, 128
+	
+	sw $t2, 0($t0)
+	sw $t2, 4($t0)
+	sw $t2, 8($t0)
+	sw $t2, 12($t0)
+	
+	sw $t2, 28($t0)
+	
+	sw $t2, 44($t0)
+	sw $t2, 48($t0)
+	sw $t2, 52($t0)
+	sw $t2, 56($t0)
+	
+	sw $t2, 64($t0)
+	sw $t2, 76($t0)
+	
+	sw $t2, 84($t0)
 	
 	li $v0, 10 # Ending the program gracefully
 	syscall
