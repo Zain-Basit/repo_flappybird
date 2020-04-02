@@ -40,6 +40,9 @@
 	pipeValues: .space 280 # An array of the addresses of the pipe walls, which cannot be touched
 	groundValue: .word 0x10008e84 # The memory address of the ground, if the bird touches this, the game ends.
 	lowestPipeValue: .word 0x10008008
+	keyPressed: .word 0xffff0000
+	keyValue: .word 0xffff0004
+	fAscii: .word 102
 	
 .text
 
@@ -79,7 +82,7 @@
 	
 		# Check if the bird has reached the ground/roof, if so jump to EXIT
 		beq $a2, $s6, EXIT
-		beq $a2, $s7, EXIT
+		beq $a2, $s7, EXIT		
 		
 		# Check if the bird has hit the pipe, if so jump to EXIT
 		jal HITBOXCHECK
@@ -87,7 +90,7 @@
 		# Check if the pipe has reached the leftmost index it can go to (displayAddress+8), if so, make a new pipe
 		bne $a1, $s4, PIPEMOVE 
 		
-		jal RANDOMINT      # Creating a new random height
+		jal RANDOMINT # Creating a new random height
 		lw $a1, displayAddress
 		addi $a1, $a1, 116
 		
@@ -104,20 +107,18 @@
 		addi $a2, $a2, 128
 		jal PAINTBIRD
 		
+		jal BIRDJUMP
+		
 		# Sleeping the thread before going to the next iteration
 		li $v0, 32
-		li $a0, 200 
+		li $a0, 250
 		syscall
 	
 		j GAMELOOP # Going to the next iteration
 	
-	# Unless the user presses f, at which point the bird goes up one level, need to make sure the bird does not attempt to go higher
-	# and off the screen (will cause a memory issue and will crash)
-	
-	
 EXIT:	
 	# If the code jumps here, we clear the pipes and bird off the screen and print a BYE statement. Then the game terminates.
-	jal PAINTBACK
+	#jal PAINTBACK
 	
 	# Need some code for printing BYE
 	
@@ -235,18 +236,24 @@ PAINTPIPE: # This is a function that paints a pipe with a given height ($s3) for
 HITBOXCHECK: # This function checks if the bird has hit the pipe, if so, the bird dies, and the game ends
 		
 		# Need to check above part 0
-		lw $s2, -128($a2)
-		beq $t3, $s2, EXIT
+		#lw $s2, -128($a2)
+		#beq $t3, $s2, EXIT	
 		
 		# Checking above part 1
-		lw $s2, -120($a2)
-		beq $t3, $s2, EXIT
+		#lw $s2, -120($a2)
+		#beq $t3, $s2, EXIT
 		
 		# Check to the right of part 1
-		lw $s2, 12($a2)
-	   	beq $t3, $s2, EXIT
+		#lw $s2, 12($a2)
+	   	#beq $t3, $s2, EXIT
 	   	
-	   	# Check to the right of part 5
+	   	lw $s2, 0($a2)
+  		beq $t3, $s2, EXIT
+  	
+  		lw $s2, 8($a2)
+  		beq $t3, $s2, EXIT
+		
+		# Check to the right of part 5
 	   	lw $s2, 144($a2)
 		beq $t3, $s2, EXIT
 		
@@ -262,4 +269,22 @@ HITBOXCHECK: # This function checks if the bird has hit the pipe, if so, the bir
 	   	lw $s2, 392($a2)
 		beq $t3, $s2, EXIT
 		
+		jr $ra
+		
+BIRDJUMP: # This function checks if the f key has been pressed, and then it makes the bird go up +1 unit
+
+	lw $s2, keyPressed
+	lw $s2, 0($s2)
+	# If s2 is 0, we do nothing, if s2 is not zero AND EQUAL to 102, we increment a2
+	
+	beqz $s2, NOJUMP # If equal to 0, we do nothing and return
+	
+	lw $s2, keyValue
+	lw $s2, 0($s2)
+	
+	bne $s2, 102, NOJUMP
+	
+	addi $a2, $a2, -256
+	
+	NOJUMP:
 		jr $ra
