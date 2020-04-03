@@ -17,19 +17,21 @@
 # Which milestone is reached in this submission?
 # (See the assignment handout for descriptions of the milestones)
 # - Milestone 1/2/3/4/5 (choose the one the applies)
-# - Completed Milestone 4
+# - Completed Milestone 5
 #
 # Which approved additional features have been implemented?
 # (See the assignment handout for the list of additional features)
 # 1. Background color fading from day to night back to day as game progress.
 # 2. Two birds. Have two birds flapping at the same time, controlled by two different keys (e.g., one controlled by "f" and one by "j").
-# 3. Changing the game difficulty. As the game progresses further, gradually increase the moving speed of the obstacles to make the game
-#	 more challenging.
+# 3. Dynamic on-screen notification messages during the game such as "Amazing!", "Wow!", "Good job!". The notification should change over time.
 #
 # Any additional information that the TA needs to know:
 # - The colour of the backgorund changes every 2 pipes. There are 4 different colours of the background.
 #   There's a morning, middday, evening, and night time colour.
-# - 
+# - There are two birds that the player(s) can play with keys f and j, however, it may be difficult to test stuff because playing with two birds
+#   as one person, is pretty hard. I tried, and I struggled.
+#
+#	To disable bird 2, please comment out the following lines of code: 82, 83, 84, 125, 191, 192
 #
 #####################################################################
 
@@ -50,7 +52,7 @@
 	jAscii: .word 106
 	
 	bird1colour: .word 0xff00f7
-	#bird2colour: .word
+	bird2colour: .word 0xe0ce00
 	
 	morningColour: .word 0xfa744f
 	middayColour: .word 0x4287f5
@@ -96,6 +98,8 @@
 		
 		li $t6, 1 # Day Cycle Counter
 		
+		li $s0, 0
+		
 	GAMELOOP:
 	
 		# Check if the bird has reached the ground/roof, if so jump to EXIT
@@ -127,8 +131,15 @@
 		# colour must change.
 		jal RANDOMINT # Creating a new random height
 		
-		lw $a1, displayAddress
+		lw $a1, displayAddress #addi $a1, $a1, 108 # Moving the pipe back to its starting location
 		addi $a1, $a1, 116
+		
+		addi $s0, $s0, 1
+		bne $s0, 7, NOTSEVEN
+		
+		li $s0, 1
+		
+		NOTSEVEN:
 		
 		
 		beq $t6, 0, MORNING # Make it morning colour
@@ -162,10 +173,7 @@
 		li $t6, -1
 	
 	SAMETIME:
-		
-		addi $t6, $t6, 1
-		
-		#addi $a1, $a1, 108 # Moving the pipe back to its starting location
+		addi $t6, $t6, 1	
 		
 	PIPEMOVE:	
 	
@@ -173,6 +181,8 @@
 	
 		addi $a1, $a1, -4 # Moving the pipe one pixel to the left
 		jal PAINTPIPE
+		
+		jal PAINTWORD
 		
 		# Decrementing the bird's position
 		addi $a2, $a2, 128
@@ -422,6 +432,8 @@ PAINTBACK: # This is a function to paint the background, usies $t0, $t1, $t4, $t
 PAINTBIRD: # This is a function that paints a bird at a given height offset ($a2)
 	   # The offset passed in should be the location of the TOP-LEFT MOST piece of the bird (part 0)
 	   # Uses $t2, $a2
+	   
+	li $t2, 0xff00f7
 	    
 	sw $t2, 0($a2)   # Painting the bird part 0 
 	sw $t2, 8($a2)   # 1
@@ -439,7 +451,9 @@ PAINTBIRD: # This is a function that paints a bird at a given height offset ($a2
 PAINTBIRD2: # This is a function that paints the second bird at a given height offset ($a3)
 	   # The offset passed in should be the location of the TOP-LEFT MOST piece of the bird (part 0)
 	   # Uses $t2, $a3
-	    
+	 
+	li $t2, 0xe0ce00 
+	
 	sw $t2, 0($a3)   # Painting the bird part 0 
 	sw $t2, 8($a3)   # 1
 	sw $t2, 128($a3) # 2 
@@ -496,7 +510,7 @@ PAINTPIPE: # This is a function that paints a pipe with a given height ($s3) for
 		
 	   PIPELOOP:
 	   	
-	   	bne $t9, $t7, PIPEROW # We check if we are at the $t7 address, if not, we paint a row and increment the offset in $t9 & $s0
+	   	bne $t9, $t7, PIPEROW # We check if we are at the $t7 address, if not, we paint a row and increment the offset in $t9 & $s7
 	   	bge $t8, 8, PIPEROW
 	   	
 	   	# If we are at the $t7 address, we need to skip an iteration, so we must increment the counter once and continue
@@ -526,18 +540,6 @@ PAINTPIPE: # This is a function that paints a pipe with a given height ($s3) for
 	   	jr $ra # Returning to the calling point of the function
 	   	
 HITBOXCHECK: # This function checks if the first bird has hit the pipe, if so, the bird dies, and the game ends
-		
-		# Need to check above part 0
-		#lw $s2, -128($a2)
-		#beq $t3, $s2, EXIT	
-		
-		# Checking above part 1
-		#lw $s2, -120($a2)
-		#beq $t3, $s2, EXIT
-		
-		# Check to the right of part 1
-		#lw $s2, 12($a2)
-	   	#beq $t3, $s2, EXIT
 	   	
 	   	lw $s2, 0($a2)
   		beq $t3, $s2, EXIT
@@ -632,4 +634,217 @@ BIRDJUMP2: # This function checks if the j key has been pressed, and then it mak
 	NOJUMP2:
 		jr $ra
 		
-		
+PAINTWORD: # This checks the value in $s0, if the value is 2, it prints wow, 
+                    			  # if the value is 4, it prints yay
+                    			  # if the value is 6, it prints gr8
+                    			  # else, do nothing 
+	
+	lw $t0, displayAddress
+	addi $t0, $t0, 188 
+	
+	li $t8, 0xffffff # Load in white here
+	
+	beq $s0, 2, WOW
+	beq $s0, 4, YAY
+	beq $s0, 6, GR8
+	
+	j NOWORD
+	
+	WOW:
+	
+	# Row 1
+	sw $t8, 0($t0) # W
+	sw $t8, 16($t0)
+	
+	sw $t8, 24($t0) # 0
+	sw $t8, 28($t0)
+	sw $t8, 32($t0)
+	sw $t8, 36($t0)
+	
+	sw $t8, 44($t0) # W
+	sw $t8, 60($t0)
+	
+	# Row 2
+	addi $t0, $t0, 128
+	sw $t8, 0($t0) # W
+	sw $t8, 16($t0)
+	
+	sw $t8, 24($t0) # 0
+	sw $t8, 36($t0)
+	
+	sw $t8, 44($t0) # W
+	sw $t8, 60($t0)
+	
+	# Row 3
+	addi $t0, $t0, 128
+	sw $t8, 0($t0) # W
+	sw $t8, 8($t0)
+	sw $t8, 16($t0)
+	
+	sw $t8, 24($t0) # 0
+	sw $t8, 36($t0)
+	
+	sw $t8, 44($t0) # W
+	sw $t8, 52($t0)
+	sw $t8, 60($t0)
+	
+	# Row 4
+	addi $t0, $t0, 128
+	sw $t8, 0($t0) # W
+	sw $t8, 4($t0)
+	sw $t8, 12($t0)
+	sw $t8, 16($t0)
+	
+	sw $t8, 24($t0) # 0
+	sw $t8, 36($t0)
+	
+	sw $t8, 44($t0) # W
+	sw $t8, 48($t0)
+	sw $t8, 56($t0)
+	sw $t8, 60($t0)
+	
+	# Row 5
+	addi $t0, $t0, 128
+	sw $t8, 0($t0) # W
+	sw $t8, 16($t0)
+	
+	sw $t8, 24($t0) # 0
+	sw $t8, 28($t0)
+	sw $t8, 32($t0)
+	sw $t8, 36($t0)
+	
+	sw $t8, 44($t0) # W
+	sw $t8, 60($t0)
+	
+	j NOWORD
+	
+	YAY:
+	
+	# Row 1
+	sw $t8, 0($t0)
+	sw $t8, 16($t0)
+	
+	sw $t8, 28($t0)
+	sw $t8, 32($t0)
+	
+	sw $t8, 44($t0)
+	sw $t8, 60($t0)
+	
+	# Row 2
+	addi $t0, $t0, 128
+	sw $t8, 4($t0)
+	sw $t8, 12($t0)
+	
+	sw $t8, 24($t0)
+	sw $t8, 36($t0)
+	
+	sw $t8, 48($t0)
+	sw $t8, 56($t0)
+	
+	# Row 3
+	addi $t0, $t0, 128
+	sw $t8, 8($t0)
+	
+	sw $t8, 24($t0)
+	sw $t8, 28($t0)
+	sw $t8, 32($t0)
+	sw $t8, 36($t0)
+	
+	sw $t8, 52($t0)
+	
+	# Row 4
+	addi $t0, $t0, 128
+	sw $t8, 8($t0)
+	
+	sw $t8, 24($t0)
+	sw $t8, 36($t0)
+	
+	sw $t8, 52($t0)
+	
+	# Row 5
+	addi $t0, $t0, 128
+	
+	sw $t8, 8($t0)
+	
+	sw $t8, 24($t0)
+	sw $t8, 36($t0)
+	
+	sw $t8, 52($t0)
+	
+	j NOWORD
+	
+	GR8:
+	
+	addi $t0, $t0, 8
+	
+	# Row 1
+	sw $t8, 4($t0)
+	sw $t8, 8($t0)
+	sw $t8, 12($t0)
+	
+	sw $t8, 20($t0)
+	sw $t8, 24($t0)
+	sw $t8, 28($t0)
+	sw $t8, 32($t0)
+	
+	sw $t8, 40($t0)
+	sw $t8, 44($t0)
+	sw $t8, 48($t0)
+	sw $t8, 52($t0)
+	
+	# Row 2
+	addi $t0, $t0, 128
+	sw $t8, 0($t0)
+	
+	sw $t8, 20($t0)
+	sw $t8, 32($t0)
+	
+	sw $t8, 40($t0)
+	sw $t8, 52($t0)
+	
+	# Row 3
+	addi $t0, $t0, 128
+	sw $t8, 0($t0)
+	sw $t8, 12($t0)
+	
+	sw $t8, 20($t0)
+	sw $t8, 24($t0)
+	sw $t8, 28($t0)
+	sw $t8, 32($t0)
+	
+	sw $t8, 40($t0)
+	sw $t8, 44($t0)
+	sw $t8, 48($t0)
+	sw $t8, 52($t0)
+	
+	# Row 4
+	addi $t0, $t0, 128
+	sw $t8, 0($t0)
+	sw $t8, 12($t0)
+	
+	sw $t8, 20($t0)
+	sw $t8, 28($t0)
+	
+	sw $t8, 40($t0)
+	sw $t8, 52($t0)
+	
+	# Row 5
+	addi $t0, $t0, 128
+	sw $t8, 0($t0)
+	sw $t8, 4($t0)
+	sw $t8, 8($t0)
+	sw $t8, 12($t0)
+	
+	sw $t8, 20($t0)
+	sw $t8, 32($t0)
+	
+	sw $t8, 40($t0)
+	sw $t8, 44($t0)
+	sw $t8, 48($t0)
+	sw $t8, 52($t0)
+	
+	NOWORD:
+	
+		lw $t0, displayAddress		
+		jr $ra
+	
