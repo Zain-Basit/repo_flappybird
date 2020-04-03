@@ -17,7 +17,7 @@
 # Which milestone is reached in this submission?
 # (See the assignment handout for descriptions of the milestones)
 # - Milestone 1/2/3/4/5 (choose the one the applies)
-# - Completed Milestone 3
+# - Completed Milestone 4
 #
 # Which approved additional features have been implemented?
 # (See the assignment handout for the list of additional features)
@@ -77,6 +77,10 @@
 		addi $a2, $a2, 788 # This will print on the second pixel of the sixth row
 		jal PAINTBIRD # Calling the PAINTBIRD Function		
 		
+		lw $a3, displayAddress
+		addi $a3, $a3, 808
+		jal PAINTBIRD2
+		
 		# Now we need to paint the pipe, which requires a random integer for the height, and an offset for the center of the pipe	
 		jal RANDOMINT # Generating a random integer to use as the height of the thing, which is stored in $s3 after RANDOMINT returns
 		lw $a1, displayAddress
@@ -90,16 +94,31 @@
 		lw $s7, displayAddress # The roof
 		addi $s7, $s7, 20
 		
-		li $t6, 1
+		li $t6, 1 # Day Cycle Counter
 		
 	GAMELOOP:
 	
 		# Check if the bird has reached the ground/roof, if so jump to EXIT
-		beq $a2, $s6, EXIT
-		beq $a2, $s7, EXIT		
+		bgt $a2, $s6, EXIT
+		beq $a2, $s7, EXIT
+		
+		# Change Floor to Bird2 Floor
+		addi $s6, $s6, 20
+		# Change Roof to Bird2 Roof
+		addi $s7, $s6, 20
+		
+		bgt $a3, $s6, EXIT # Checking roof and floor
+		beq $a3, $s7, EXIT
+		
+		# Change Floor back to Bird1 Floor
+		addi $s6, $s6, -20
+		# Change Roof back to Bird1 Roof
+		addi $s7, $s6, -20
+		
 		
 		# Check if the bird has hit the pipe, if so jump to EXIT
 		jal HITBOXCHECK
+		jal HITBOXCHECK2
 		
 		# Check if the pipe has reached the leftmost index it can go to (displayAddress+8), if so, make a new pipe
 		bne $a1, $s4, PIPEMOVE 
@@ -148,9 +167,7 @@
 		
 		#addi $a1, $a1, 108 # Moving the pipe back to its starting location
 		
-	PIPEMOVE:
-	
-		
+	PIPEMOVE:	
 	
 		jal PAINTBACK
 	
@@ -161,11 +178,14 @@
 		addi $a2, $a2, 128
 		jal PAINTBIRD
 		
+		addi $a3, $a3, 128
+		jal PAINTBIRD2
+		
 		jal BIRDJUMP
 		
 		# Sleeping the thread before going to the next iteration
 		li $v0, 32
-		li $a0, 250
+		li $a0, 350
 		syscall
 	
 		j GAMELOOP # Going to the next iteration
@@ -375,6 +395,8 @@ EXIT:
 	
 	sw $t2, 84($t0)
 	
+QEXIT:
+	
 	li $v0, 10 # Ending the program gracefully
 	syscall
 	
@@ -410,6 +432,23 @@ PAINTBIRD: # This is a function that paints a bird at a given height offset ($a2
 	sw $t2, 256($a2) # 6
 	sw $t2, 260($a2) # 7 
 	sw $t2, 264($a2) # 8
+		   
+	jr $ra # Returning to the calling address
+	
+	
+PAINTBIRD2: # This is a function that paints the second bird at a given height offset ($a3)
+	   # The offset passed in should be the location of the TOP-LEFT MOST piece of the bird (part 0)
+	   # Uses $t2, $a3
+	    
+	sw $t2, 0($a3)   # Painting the bird part 0 
+	sw $t2, 8($a3)   # 1
+	sw $t2, 128($a3) # 2 
+	sw $t2, 132($a3) # 3
+	sw $t2, 136($a3) # 4
+	sw $t2, 140($a3) # 5
+	sw $t2, 256($a3) # 6
+	sw $t2, 260($a3) # 7 
+	sw $t2, 264($a3) # 8
 		   
 	jr $ra # Returning to the calling address
 	   
@@ -486,7 +525,7 @@ PAINTPIPE: # This is a function that paints a pipe with a given height ($s3) for
 	   
 	   	jr $ra # Returning to the calling point of the function
 	   	
-HITBOXCHECK: # This function checks if the bird has hit the pipe, if so, the bird dies, and the game ends
+HITBOXCHECK: # This function checks if the first bird has hit the pipe, if so, the bird dies, and the game ends
 		
 		# Need to check above part 0
 		#lw $s2, -128($a2)
@@ -521,8 +560,35 @@ HITBOXCHECK: # This function checks if the bird has hit the pipe, if so, the bir
 		# Check below part 8
 	   	lw $s2, 392($a2)
 		beq $t3, $s2, EXIT
+		###
 		
+		###
 		jr $ra
+		
+HITBOXCHECK2:
+
+	lw $s2, 0($a3)
+  	beq $t3, $s2, EXIT
+  	lw $s2, 8($a3)
+  	beq $t3, $s2, EXIT
+		
+	#Check to the right of part 5
+	 lw $s2, 144($a3)
+	beq $t3, $s2, EXIT
+		
+		# Check below part 5
+	lw $s2, 268($a3)
+	beq $t3, $s2, EXIT
+		
+	# Check below part 6
+	lw $s2, 384($a3)
+	beq $t3, $s2, EXIT
+		
+	# Check below part 8
+	lw $s2, 392($a3)
+	beq $t3, $s2, EXIT
+
+	jr $ra
 		
 BIRDJUMP: # This function checks if the f key has been pressed, and then it makes the bird go up +1 unit
 
@@ -535,9 +601,35 @@ BIRDJUMP: # This function checks if the f key has been pressed, and then it make
 	lw $s2, keyValue
 	lw $s2, 0($s2)
 	
-	bne $s2, 102, NOJUMP
+	beq $s2, 102, FJUMP
+	beq $s2, 106, JJUMP
 	
-	addi $a2, $a2, -256
-	
+	FJUMP:
+		addi, $a2, $a2, -256
+		bne $s2, 106, NOJUMP		
+	JJUMP:
+		addi $a3, $a3, -256
+		bne $s2, 102, NOJUMP
+		addi $a2, $a2, -256			
 	NOJUMP:
 		jr $ra
+
+BIRDJUMP2: # This function checks if the j key has been pressed, and then it makes the second bird go up +1 unit
+
+	lw $s2, keyPressed
+	lw $s2, 0($s2)
+	# If s2 is 0, we do nothing, if s2 is not zero AND EQUAL to 102, we increment a3
+	
+	beqz $s2, NOJUMP2 # If equal to 0, we do nothing and return
+	
+	lw $s2, keyValue
+	lw $s2, 0($s2)
+	
+	bne $s2, 106, NOJUMP2
+	
+	addi $a3, $a3, -256
+		
+	NOJUMP2:
+		jr $ra
+		
+		
