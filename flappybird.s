@@ -21,13 +21,15 @@
 #
 # Which approved additional features have been implemented?
 # (See the assignment handout for the list of additional features)
-# 1. (fill in the feature, if any)
-# 2. (fill in the feature, if any)
-# 3. (fill in the feature, if any)
-# ... (add more if necessary)
+# 1. Background color fading from day to night back to day as game progress.
+# 2. Two birds. Have two birds flapping at the same time, controlled by two different keys (e.g., one controlled by "f" and one by "j").
+# 3. Changing the game difficulty. As the game progresses further, gradually increase the moving speed of the obstacles to make the game
+#	 more challenging.
 #
 # Any additional information that the TA needs to know:
-# - (write here, if any)
+# - The colour of the backgorund changes every 2 pipes. There are 4 different colours of the background.
+#   There's a morning, middday, evening, and night time colour.
+# - 
 #
 #####################################################################
 
@@ -37,19 +39,30 @@
 	#backgroundColour: .word 0x4287f5 # Having these here may be pointless, so might have to remove them
 	#birdColour: .word 0xff00f7
 	#pipeColour: .word 0x08a300
+	
 	pipeValues: .space 280 # An array of the addresses of the pipe walls, which cannot be touched
 	groundValue: .word 0x10008e84 # The memory address of the ground, if the bird touches this, the game ends.
 	lowestPipeValue: .word 0x10008008
+	
 	keyPressed: .word 0xffff0000
 	keyValue: .word 0xffff0004
 	fAscii: .word 102
+	jAscii: .word 106
 	
+	bird1colour: .word 0xff00f7
+	#bird2colour: .word
+	
+	morningColour: .word 0xfa744f
+	middayColour: .word 0x4287f5
+	eveningColour: .word 0x9d7eb7
+	nightColour: .word 0x071d5e
+
 .text
 
 	GAMEINIT:
 		lw $t0, displayAddress	# Loading in the address of the first pixel in the display	
-		li $t1, 0x4287f5 # Colour of the Background: #4287f5, a blue colour
-		li $t2, 0xff00f7 # Colour of the Bird: #ff00f7, a pink colour
+		li $t1, 0xfa744f # Colour of the Background: #4287f5, a blue colour
+		li $t2, 0xff00f7 # Colour of the Bird1: #ff00f7, a pink colour
 		li $t3, 0x08a300 # Colour of the Pipe: #08a300, a green colour
 		lw $s4, lowestPipeValue
 	
@@ -77,6 +90,8 @@
 		lw $s7, displayAddress # The roof
 		addi $s7, $s7, 20
 		
+		li $t6, 1
+		
 	GAMELOOP:
 	
 		# Check if the bird has reached the ground/roof, if so jump to EXIT
@@ -89,13 +104,53 @@
 		# Check if the pipe has reached the leftmost index it can go to (displayAddress+8), if so, make a new pipe
 		bne $a1, $s4, PIPEMOVE 
 		
+		# If we are creating a new pipe, than that means we increment the colour counters as well and check if the background
+		# colour must change.
 		jal RANDOMINT # Creating a new random height
+		
 		lw $a1, displayAddress
 		addi $a1, $a1, 116
+		
+		
+		beq $t6, 0, MORNING # Make it morning colour
+		beq $t6, 2, MIDDAY  # Make it midday
+		beq $t6, 4, EVENING # Make it evening
+		beq $t6, 6, NIGHT   # Make it night
+		beq $t6, 7, RESETDAY
+		
+		j SAMETIME
+		
+	MORNING:
+		li $t1, 0xfa744f
+		#lw $t1, 0($t1)
+		j SAMETIME
+	MIDDAY:
+		li $t1, 0x4287f5
+		#lw $t1, 0($t1)
+		j SAMETIME
+		
+	EVENING:
+		li $t1, 0x9d7eb7
+		#lw $t1, 0($t1)
+		j SAMETIME
+	
+	NIGHT:
+		li $t1, 0x071d5e
+		#lw $t1, 0($t1)
+		j SAMETIME
+	
+	RESETDAY:
+		li $t6, -1
+	
+	SAMETIME:
+		
+		addi $t6, $t6, 1
 		
 		#addi $a1, $a1, 108 # Moving the pipe back to its starting location
 		
 	PIPEMOVE:
+	
+		
 	
 		jal PAINTBACK
 	
