@@ -4,8 +4,8 @@
 # University of Toronto Mississauga
 #
 # Group members:
-# - Student 1: Syed Zain Basit, 1004900752
-# - Student 2: Alex Ng, 1005223642
+# - Student 1: Syed Zain Basit
+# - Student 2: Alex Ng
 #
 # Bitmap Display Configuration:
 # - Unit width in pixels: 8					     
